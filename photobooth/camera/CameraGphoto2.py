@@ -135,10 +135,24 @@ class CameraGphoto2(CameraInterface):
         file_data = camera_file.get_data_and_size()
         return Image.open(io.BytesIO(file_data))
 
+    def _empty_event_queue(self):
+        while True:
+            type_, data = self._cap.wait_for_event(10)
+            if type_ == gp.GP_EVENT_TIMEOUT:
+                return
+            if type_ == gp.GP_EVENT_CAPTURE_COMPLETE:
+                logging.info('Capture compleat')
+            if type_ == gp.GP_EVENT_FILE_ADDED:
+                # get a second image if camera is set to raw + jpeg
+                logging.info('Unexpected new file', data.folder + data.name)
+
     def getPicture(self):
 
         file_path = self._cap.capture(gp.GP_CAPTURE_IMAGE)
         camera_file = self._cap.file_get(file_path.folder, file_path.name,
                                          gp.GP_FILE_TYPE_NORMAL)
         file_data = camera_file.get_data_and_size()
+
+        self._empty_event_queue()
+
         return Image.open(io.BytesIO(file_data))
