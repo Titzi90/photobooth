@@ -39,15 +39,17 @@ modules = (
 
 class Camera:
 
-    def __init__(self, config, comm, CameraModule):
+    def __init__(self, config, comm, CameraModule, PreviewCameraModule):
 
         super().__init__()
 
         self._comm = comm
         self._cfg = config
         self._cam = CameraModule
+        self._preview_cam = PreviewCameraModule
 
         self._cap = None
+        self._preview_cap = None
         self._pic_dims = None
 
         self._is_preview = self._cfg.getBool('Photobooth', 'show_preview')
@@ -60,6 +62,7 @@ class Camera:
     def startup(self):
 
         self._cap = self._cam()
+        self._preview_cap = self._preview_cam()
 
         logging.info('Using camera {} preview functionality'.format(
             'with' if self._is_preview else 'without'))
@@ -69,7 +72,7 @@ class Camera:
             test_picture = test_picture.transpose(self._rotation)
 
         self._pic_dims = PictureDimensions(self._cfg, test_picture.size)
-        self._is_preview = self._is_preview and self._cap.hasPreview
+        self._is_preview = self._is_preview and self._preview_cap.hasPreview
 
         background = self._cfg.get('Picture', 'background')
         if len(background) > 0:
@@ -128,7 +131,7 @@ class Camera:
 
         if self._is_preview:
             while self._comm.empty(Workers.CAMERA):
-                picture = self._cap.getPreview()
+                picture = self._preview_cap.getPreview()
                 if self._rotation is not None:
                     picture = picture.transpose(self._rotation)
                 picture = picture.resize(self._pic_dims.previewSize)

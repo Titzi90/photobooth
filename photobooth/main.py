@@ -58,7 +58,9 @@ class CameraProcess(mp.Process):
 
         CameraModule = lookup_and_import(
             camera.modules, self._cfg.get('Camera', 'module'), 'camera')
-        cap = camera.Camera(self._cfg, self._comm, CameraModule)
+        CameraModulePreview = lookup_and_import(
+            camera.modules, self._cfg.get('Camera', 'modulePreview'), 'camera')
+        cap = camera.Camera(self._cfg, self._comm, CameraModule, CameraModulePreview)
 
         while True:
             try:
